@@ -135,6 +135,45 @@ Commands:
 This uses the shebang of the script (e.g. `#!/usr/bin/env bash` or `#!/usr/bin/python3`) to determine
 what to run the file with. If it can't detect properly, it uses `bash` (you can change that like `REMINDER_SINK_DEFAULT_INTERPRETER=python`)
 
+## Example
+
+```
+[ ~ ] $ reminder-sink list
+Script(path=PosixPath('/home/sean/data/reminder-sink/self_type_common.py'), enabled=False)
+Script(path=PosixPath('/home/sean/data/reminder-sink/physical_activity.enabled'), enabled=True)
+Script(path=PosixPath('/home/sean/data/reminder-sink/mal_sources'), enabled=False)
+Script(path=PosixPath('/home/sean/.local/scripts/reminder-sink/flipflop'), enabled=True)
+Script(path=PosixPath('/home/sean/.local/scripts/reminder-sink/weight'), enabled=True)
+Script(path=PosixPath('/home/sean/.local/scripts/reminder-sink/listen_to_album'), enabled=True)
+Script(path=PosixPath('/home/sean/.local/scripts/reminder-sink/food'), enabled=True)
+Script(path=PosixPath('/home/sean/.local/scripts/reminder-sink/water'), enabled=True)
+```
+
+This runs the scripts in parallel, with the number of threads equal to the number of cores you have available:
+
+```
+2023-10-06 00:54:28,197 DEBUG - reminder-sink: Running scripts with 16 threads
+2023-10-06 00:54:28,197 DEBUG - reminder-sink: Searching /home/sean/data/reminder-sink
+2023-10-06 00:54:28,197 DEBUG - self_type_common: not enabled
+2023-10-06 00:54:28,197 DEBUG - physical_activity: Starting '/usr/bin/env bash /home/sean/data/reminder-sink/physical_activity.enabled'
+2023-10-06 00:54:28,199 DEBUG - mal_sources: Starting '/usr/bin/env bash /home/sean/data/reminder-sink/mal_sources'
+2023-10-06 00:54:28,199 DEBUG - reminder-sink: finished searching /home/sean/data/reminder-sink
+2023-10-06 00:54:28,199 DEBUG - reminder-sink: Searching /home/sean/.local/scripts/reminder-sink
+2023-10-06 00:54:28,200 DEBUG - flipflop: Starting '/usr/bin/env bash /home/sean/.local/scripts/reminder-sink/flipflop'
+2023-10-06 00:54:28,201 DEBUG - weight: Starting '/usr/bin/env bash /home/sean/.local/scripts/reminder-sink/weight'
+2023-10-06 00:54:28,203 DEBUG - listen_to_album: Starting '/usr/bin/env bash /home/sean/.local/scripts/reminder-sink/listen_to_album'
+2023-10-06 00:54:28,203 DEBUG - food: Starting '/usr/bin/env bash /home/sean/.local/scripts/reminder-sink/food'
+2023-10-06 00:54:28,204 DEBUG - reminder-sink: finished searching /home/sean/.local/scripts/reminder-sink
+2023-10-06 00:54:28,204 DEBUG - water: Starting '/usr/bin/env bash /home/sean/.local/scripts/reminder-sink/water'
+2023-10-06 00:54:28,218 DEBUG - mal_sources: (took 0.01922) with exit code 0 and output ''
+2023-10-06 00:54:28,306 DEBUG - flipflop: (took 0.10657) with exit code 0 and output ''
+2023-10-06 00:54:28,319 DEBUG - physical_activity: (took 0.12172) with exit code 0 and output ''
+2023-10-06 00:54:28,321 DEBUG - weight: (took 0.12033) with exit code 0 and output ''
+2023-10-06 00:54:28,346 DEBUG - food: (took 0.14306) with exit code 0 and output ''
+2023-10-06 00:54:28,357 DEBUG - water: (took 0.15303) with exit code 0 and output ''
+2023-10-06 00:54:28,436 DEBUG - listen_to_album: (took 0.23399) with exit code 0 and output ''
+```
+
 ## Installation
 
 Requires `python3.10+`
