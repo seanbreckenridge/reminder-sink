@@ -1,4 +1,7 @@
-This is a unobtrusive, scriptable reminder/habit/todo task-runner.
+This is a unobtrusive, scriptable reminder/habit/todo task-runner. This does
+not actually have any way to setup/remind you for specific habits/tasks, it
+provides more of a set of rules which make for an unobtrusive reminder/habit
+tracker, it acts as the "sink" for all my other tools/scripts
 
 Probably easiest explained with some examples:
 
@@ -40,9 +43,6 @@ listen_to_album   # from the name of the script
 refill_medication  # these 2 lines were the output of 'flipflop.py status'
 add_energy_bar
 ```
-
-This does not actually have any way to setup/remind you for specific habits/tasks,
-it provides more of a set of rules which make for an unobtrusive reminder/habit tracker
 
 Instead of reminding me once a day to do something, this uses local data (or an API request
 if you want -- its just a script, you can do whatever you want!) to determine if I've done
