@@ -140,7 +140,7 @@ what to run the file with. If it can't detect properly, it uses `bash` (you can 
 ## Example
 
 ```
-[ ~ ] $ reminder-sink list
+$ reminder-sink list
 Script(path=PosixPath('/home/sean/data/reminder-sink/self_type_common.py'), enabled=False)
 Script(path=PosixPath('/home/sean/data/reminder-sink/physical_activity.enabled'), enabled=True)
 Script(path=PosixPath('/home/sean/data/reminder-sink/mal_sources'), enabled=False)
@@ -154,6 +154,7 @@ Script(path=PosixPath('/home/sean/.local/scripts/reminder-sink/water'), enabled=
 This runs the scripts in parallel, with the number of threads equal to the number of cores you have available:
 
 ```
+$ reminder-sink --debug run
 2023-10-06 00:54:28,197 DEBUG - reminder-sink: Running scripts with 16 threads
 2023-10-06 00:54:28,197 DEBUG - reminder-sink: Searching /home/sean/data/reminder-sink
 2023-10-06 00:54:28,197 DEBUG - self_type_common: not enabled
