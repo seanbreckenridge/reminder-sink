@@ -61,8 +61,8 @@ get interrupted or feel like I have to 'snooze'/delay the habit.
 I also don't feel too horrible if there's a number there for a couple hours, I get
 around to the task eventually
 
-I generally track my habits with my `Self` type using [ttally](https://github.com/seanbreckenridge/ttally),
-and use [i3blocks](https://github.com/vivien/i3blocks) for my status bar. The block this runs for
+I generally track my habits with my `Self` type using [`ttally`](https://github.com/seanbreckenridge/ttally),
+and use [`i3blocks`](https://github.com/vivien/i3blocks) for my status bar. The block this runs for
 `reminder-sink` looks like this:
 
 ```bash
@@ -92,11 +92,11 @@ Or just run `reminder-sink run` when you start up a new terminal or something, t
 You can see some of my other reminder-sink jobs [in my dotfiles](https://github.com/seanbreckenridge/dotfiles/tree/master/.local/scripts/reminder-sink), but I use this for stuff like:
 
 - reminding me to log my weight at least once a week
-- making sure I drink enough water (using [ttally](https://github.com/seanbreckenridge/ttally))
+- making sure I drink enough water (using [`ttally`](https://github.com/seanbreckenridge/ttally))
 - listen to album once a week (by using my [spreadsheet](https://sean.fish/s/albums))
 - tracking physical activity
 - remind me to re-fill on medication when it runs out
-- watch something on my movie/tv show backlog once every couple days (this gets tracked automatically by my [mpv-history-daemon](https://github.com/seanbreckenridge/mpv-history-daemon))
+- watch something on my movie/tv show backlog once every couple days (this gets tracked automatically by my [`mpv-history-daemon`](https://github.com/seanbreckenridge/mpv-history-daemon))
 
 ## Usage:
 
