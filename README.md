@@ -48,8 +48,8 @@ Instead of reminding me once a day to do something, this uses local data (or an 
 if you want -- its just a script, you can do whatever you want!) to determine if I've done
 it within the timeframe
 
-I really dislike habit building/reminder apps that interrupt my workflow. When I get the
-notification to remind me to do something, it feels like I _have to_ do it at that moment,
+I really dislike habit building/reminder apps that interrupt me while Im doing other things.
+When I get the notification to remind me to do something, it feels like I _have to_ do it at that moment,
 else I'll forget or delay it, which is totally antithetical to actually building a habit
 
 But, if there's no reminder, I often forget to do things.
