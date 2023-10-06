@@ -3,7 +3,7 @@ not actually have any way to setup/remind you for specific habits/tasks, it
 provides more of a set of rules which make for an unobtrusive reminder/habit
 tracker, it acts as the "sink" for all my other tools/scripts
 
-Probably easiest explained with some examples:
+Probably easiest explained with some examples of scripts this might run:
 
 ```bash
 # remind me to listen to a new album once a week
