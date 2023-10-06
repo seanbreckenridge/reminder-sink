@@ -6,6 +6,7 @@ tracker, it acts as the "sink" for all my other tools/scripts
 Probably easiest explained with some examples of scripts this might run:
 
 ```bash
+#!/usr/bin/env bash
 # remind me to listen to a new album once a week
 
 # interfaces with my spreadsheet where I track my albums
@@ -26,6 +27,7 @@ I'll often run `flipflop` when I'm away from my computer using [termux](https://
 Instead of adding some reminder system inside `flipflop`, `reminder-sink` is the 'sink' for the data:
 
 ```bash
+#!/usr/bin/env bash
 OUTPUT="$(flipflop.py status -fo json | jq 'keys[]' -r)"
 
 if [[ -n "$OUTPUT" ]]; then

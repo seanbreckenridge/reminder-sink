@@ -150,7 +150,11 @@ def write_results(futures: Iterable[Future[Result]], out: TextIO) -> None:
 FORMAT = "%(asctime)s %(levelname)s - %(message)s"
 
 
-@click.group(help=USAGE, context_settings={"help_option_names": ["-h", "--help"]})
+@click.group(
+    help=USAGE,
+    context_settings={"help_option_names": ["-h", "--help"]},
+    epilog="See https://github.com/seanbreckenridge/reminder-sink for more information",
+)
 @click.option(
     "-d",
     "--debug",
