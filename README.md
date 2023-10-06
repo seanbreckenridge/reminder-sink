@@ -62,8 +62,8 @@ I also don't feel too horrible if there's a number there for a couple hours, I g
 around to the task eventually
 
 I generally track my habits with my `Self` type using [`ttally`](https://github.com/seanbreckenridge/ttally),
-and use [`i3blocks`](https://github.com/vivien/i3blocks) for my status bar. The block this runs for
-`reminder-sink` looks like this:
+and use [`i3blocks`](https://github.com/vivien/i3blocks) for my status bar. [The block for
+`reminder-sink`](https://sean.fish/d/b-reminder-sink?redirect) looks like this:
 
 ![image](https://github.com/seanbreckenridge/reminder-sink/assets/7804791/0bc9706d-419c-41fe-91dc-217893ba2475)
 
