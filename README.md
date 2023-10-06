@@ -199,6 +199,6 @@ reminder-sink --help
 git clone 'https://github.com/seanbreckenridge/reminder-sink'
 cd ./reminder-sink
 pip install '.[testing]'
-flake8 ./reminder-sink
-mypy ./reminder-sink
+flake8 ./reminder_sink
+mypy ./reminder_sink
 ```
