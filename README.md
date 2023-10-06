@@ -142,7 +142,7 @@ Requires `python3.10+`
 To install with pip, run:
 
 ```
-pip install git+https://github.com/seanbreckenridge/reminder-sink
+pip install reminder-sink
 ```
 
 ## Usage
@@ -157,7 +157,6 @@ reminder-sink --help
 git clone 'https://github.com/seanbreckenridge/reminder-sink'
 cd ./reminder-sink
 pip install '.[testing]'
-pytest
 flake8 ./reminder-sink
 mypy ./reminder-sink
 ```
