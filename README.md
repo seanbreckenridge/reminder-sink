@@ -100,7 +100,7 @@ You can see some of my other reminder-sink jobs [in my dotfiles](https://github.
 - remind me to re-fill on medication when it runs out
 - watch something on my movie/tv show backlog once every couple days (this gets tracked automatically by my [`mpv-history-daemon`](https://github.com/seanbreckenridge/mpv-history-daemon))
 
-## Usage:
+## Usage
 
 ```
 Usage: reminder-sink [OPTIONS] COMMAND [ARGS]...
@@ -185,12 +185,6 @@ To install with pip, run:
 
 ```
 pip install reminder-sink
-```
-
-## Usage
-
-```
-reminder-sink --help
 ```
 
 ### Tests
