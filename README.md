@@ -65,6 +65,8 @@ I generally track my habits with my `Self` type using [`ttally`](https://github.
 and use [`i3blocks`](https://github.com/vivien/i3blocks) for my status bar. The block this runs for
 `reminder-sink` looks like this:
 
+![image](https://github.com/seanbreckenridge/reminder-sink/assets/7804791/0bc9706d-419c-41fe-91dc-217893ba2475)
+
 ```bash
 #!/usr/bin/env bash
 
