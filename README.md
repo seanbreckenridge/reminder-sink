@@ -75,7 +75,7 @@ and use [`i3blocks`](https://github.com/vivien/i3blocks) for my status bar. [The
 # if I left-click the icon, send a notification with what's expired
 case "${BLOCK_BUTTON}" in
 1)
-    notify-send "$(reminder-sink)"
+    notify-send "$(reminder-sink run)"
     ;;
 esac
 
