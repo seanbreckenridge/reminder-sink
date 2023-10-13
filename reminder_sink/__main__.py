@@ -61,7 +61,9 @@ class Script(NamedTuple):
             # remove /usr/bin/env, its looked up in PATH anyways
             if interp.startswith("/usr/bin/env "):
                 interp = interp[len("/usr/bin/env ") :]
-            return interp
+            # if it was misconfusigred/empty, don't use it
+            if interp.strip():
+                return interp
         return None
 
     def run(self) -> Result:
