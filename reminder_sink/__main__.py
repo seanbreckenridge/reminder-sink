@@ -42,7 +42,7 @@ def is_executable(path: str) -> bool:
 
 
 Result = tuple[str, int, str]
-IGNORE_DIRS = {"__pycache__", ".git", ".mypy_cache", ".pytest_cache", ".stignore"}
+IGNORE_FILES = {"__pycache__", ".git", ".mypy_cache", ".pytest_cache", ".stignore"}
 
 
 class Script(NamedTuple):
@@ -57,7 +57,11 @@ class Script(NamedTuple):
         with open(self.path) as f:
             first_line = f.readline()
         if first_line.startswith("#!"):
-            return first_line[2:].strip()
+            interp = first_line[2:].strip()
+            # remove /usr/bin/env, its looked up in PATH anyways
+            if interp.startswith("/usr/bin/env "):
+                interp = interp[len("/usr/bin/env ") :]
+            return interp
         return None
 
     def run(self) -> Result:
@@ -105,7 +109,7 @@ def find_execs() -> Iterable[Script]:
             click.echo(f"Error: {d} is not a directory", err=True)
             continue
         for file in os.listdir(d):
-            if os.path.basename(file) in IGNORE_DIRS:
+            if os.path.basename(file) in IGNORE_FILES:
                 continue
             abspath = os.path.abspath(os.path.join(d, file))
             enabled = is_executable(abspath) or file.endswith(".enabled")
