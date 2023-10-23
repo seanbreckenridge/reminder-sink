@@ -185,29 +185,25 @@ $ reminder-sink --debug run
 To temporarily silence a reminder, you can use the 'silence' command:
 
 ```
-Usage: reminder-sink silence [OPTIONS] NAME
+Usage: reminder-sink silence [OPTIONS] COMMAND [ARGS]...
 
   Silences a reminder for some duration
 
   This can be useful to ignore a reminder temporarily without modifying the
   underlying mechanism to check for the reminder
 
-  This allows you to pass a unix-like glob (uses the fnmatch module) for the
-  name
-
-  You could also use 'reminder-sink run' itself with fzf to select one, like:
-
-  reminder-sink silence "$(reminder-sink run | fzf)"
-
   To change the location of the file where this stores silenced reminders, you
   can set the REMINDER_SINK_SILENT_FILE envvar
 
 Options:
-  -d, --duration INTEGER  number of seconds to silence this reminder for
-                          [default: 1 day]
-  -h, --help              Show this message and exit.
-```
+  -h, --help  Show this message and exit.
 
+Commands:
+  add    silence a reminder
+  file   print location of silenced reminders file
+  list   list silenced reminders
+  reset  reset all silenced reminders
+```
 
 ## Installation
 

@@ -49,13 +49,14 @@ cache_dir = Path(os.environ.get("XDG_CACHE_HOME", Path.home() / ".cache"))
 silent_file_location = cache_dir / "reminder-sink-silent.txt"
 if "REMINDER_SINK_SILENT_FILE" in os.environ:
     silent_file_location = Path(os.environ["REMINDER_SINK_SILENT_FILE"])
+silent_file_location = silent_file_location.expanduser().absolute()
 
 
 class SilentFile(NamedTuple):
     file: Path
 
     @staticmethod
-    def parse_line(line: str, curtime: int) -> Optional[str]:
+    def line_is_active(line: str, curtime: int) -> Optional[str]:
         """
         parses a line that looks like:
 
@@ -66,7 +67,11 @@ class SilentFile(NamedTuple):
         if not epoch.isnumeric():
             logging.warning(f"Failed to parse integer from line: {line}")
             return None
-        expired_at = int(epoch)
+        try:
+            expired_at = int(epoch)
+        except ValueError:
+            logging.warning(f"Failed to parse integer from line: {line}")
+            return None
         if curtime > expired_at:
             return None
         return match
@@ -78,7 +83,7 @@ class SilentFile(NamedTuple):
         curtime = int(time.time())
         for line in self.file.open("r"):
             if ls := line.strip():
-                if active := self.parse_line(ls, curtime):
+                if active := self.line_is_active(ls, curtime):
                     logging.debug(f"active silencer: {repr(active)}")
                     yield active
 
@@ -299,7 +304,21 @@ def run(cpu_count: int) -> None:
     sys.stdout.flush()
 
 
-@main.command(name="silence", short_help="temporarily silence a reminder")
+@main.group(name="silence", short_help="temporarily silence a reminder")
+def _silence():
+    """
+    Silences a reminder for some duration
+
+    This can be useful to ignore a reminder temporarily without modifying
+    the underlying mechanism to check for the reminder
+
+    To change the location of the file where this stores silenced reminders,
+    you can set the REMINDER_SINK_SILENT_FILE envvar
+    """
+    pass
+
+
+@_silence.command(name="add", short_help="silence a reminder")
 @click.option(
     "-d",
     "--duration",
@@ -308,22 +327,14 @@ def run(cpu_count: int) -> None:
     type=int,
 )
 @click.argument("NAME")
-def _silence(duration: int, name: str) -> None:
+def _silence_add(duration: int, name: str) -> None:
     """
-    Silences a reminder for some duration
-
-    This can be useful to ignore a reminder temporarily without modifying
-    the underlying mechanism to check for the reminder
-
     This allows you to pass a unix-like glob (uses the fnmatch module) for the name
 
     \b
     You could also use 'reminder-sink run' itself with fzf to select one, like:
 
-    reminder-sink silence "$(reminder-sink run | fzf)"
-
-    To change the location of the file where this stores silenced reminders,
-    you can set the REMINDER_SINK_SILENT_FILE envvar
+    reminder-sink silence add "$(reminder-sink run | fzf)"
     """
     sf = SilentFile(Path(silent_file_location))
     try:
@@ -331,6 +342,34 @@ def _silence(duration: int, name: str) -> None:
     except ValueError as e:
         click.echo(f"Error: {e}", err=True)
         raise SystemExit(1)
+
+
+@_silence.command(name="list", short_help="list silenced reminders")
+def _silence_list() -> None:
+    """
+    Lists all silenced reminders
+    """
+    sf = SilentFile(Path(silent_file_location))
+    for line in sf.load():
+        click.echo(line)
+
+
+@_silence.command(name="reset", short_help="reset all silenced reminders")
+def _silence_reset() -> None:
+    """
+    Resets all silenced reminders
+    """
+    sf = Path(silent_file_location)
+    if sf.exists():
+        sf.unlink()
+
+
+@_silence.command(name="file", short_help="print location of silenced reminders file")
+def _silence_file() -> None:
+    """
+    Prints the location of the silenced reminders file
+    """
+    click.echo(silent_file_location)
 
 
 if __name__ == "__main__":
