@@ -6,7 +6,7 @@ import subprocess
 import shlex
 import logging
 from pathlib import Path
-from typing import TextIO, Iterable, NamedTuple, Optional
+from typing import TextIO, Iterable, NamedTuple, Optional, Iterator, List, Literal
 from concurrent.futures import ThreadPoolExecutor, Future, as_completed
 
 import click
@@ -43,6 +43,59 @@ def is_executable(path: str) -> bool:
 
 Result = tuple[str, int, str]
 IGNORE_FILES = {"__pycache__", ".git", ".mypy_cache", ".pytest_cache", ".stignore"}
+
+
+cache_dir = Path(os.environ.get("XDG_CACHE_HOME", Path.home() / ".cache"))
+silent_file_location = cache_dir / "reminder-sink-silent.txt"
+if "REMINDER_SINK_SILENT_FILE" in os.environ:
+    silent_file_location = Path(os.environ["REMINDER_SINK_SILENT_FILE"])
+
+
+class SilentFile(NamedTuple):
+    file: Path
+
+    @staticmethod
+    def parse_line(line: str, curtime: int) -> Optional[str]:
+        """
+        parses a line that looks like:
+
+        name_of_script:1698097637
+        where the number is when the script expires
+        """
+        match, _, epoch = line.partition(":")
+        if not epoch.isnumeric():
+            logging.warning(f"Failed to parse integer from line: {line}")
+            return None
+        expired_at = int(epoch)
+        if curtime > expired_at:
+            return None
+        return match
+
+    def load(self) -> Iterator[str]:
+        if not self.file.exists():
+            logging.debug(f"{self.file} does not exist, skipping SilentFile load")
+            return
+        curtime = int(time.time())
+        for line in self.file.open("r"):
+            if ls := line.strip():
+                if active := self.parse_line(ls, curtime):
+                    logging.debug(f"active silencer: {repr(active)}")
+                    yield active
+
+    def add_to_file(self, name: str, duration: int) -> None:
+        if ":" in name:
+            raise ValueError("pattern to silence cannot contain ':'")
+        if name.strip() == "":
+            raise ValueError("no text passed as input pattern")
+        with self.file.open("a") as f:
+            # add the duration to the current time, that is when this expires
+            f.write(f"{name}:{int(time.time() + duration)}\n")
+
+    @staticmethod
+    def is_silenced(name: str, *, silenced: List[str]) -> bool:
+        import fnmatch
+
+        return any(fnmatch.fnmatch(name, active) for active in silenced)
 
 
 class Script(NamedTuple):
@@ -100,7 +153,8 @@ def find_execs() -> Iterable[Script]:
             "It should contain a colon-delimited list of directories "
             "that contain reminder-sink jobs. "
             "For example, in your shell profile, set:\n"
-            'export REMINDER_SINK_PATH="${HOME}/.local/share/reminder-sink:${HOME}/data/reminder-sink"'
+            'export REMINDER_SINK_PATH="${HOME}/.local/share/reminder-sink:${HOME}/data/reminder-sink"',
+            err=True,
         )
         return
     for d in dirs.split(":"):
@@ -133,24 +187,31 @@ def run_parallel_scripts(
             yield executor.submit(script.run)
 
 
-def print_result(res: Result, out: TextIO) -> None:
+def parse_result(res: Result) -> List[str]:
     name, exitcode, output = res
     match exitcode:
         case 0:
             pass
         case 2:
-            out.write(name + "\n")
+            return [name]
         case 3:
-            out.write(output.rstrip("\n") + "\n")
+            return output.strip().splitlines()
         case _:
             logging.error(
                 f"{name}: exited with non-(0,2,3) exit code. Pass --debug or set REMINDER_SINK_DEBUG=1 to see output"
             )
+    return []
 
 
-def write_results(futures: Iterable[Future[Result]], out: TextIO) -> None:
+def write_results(
+    futures: Iterable[Future[Result]], /, *, file: TextIO, silenced: List[str]
+) -> None:
+    logging.debug(f"{silenced=}")
     for future in as_completed(futures):
-        print_result(future.result(), out)
+        if lines := parse_result(future.result()):
+            for line in lines:
+                if not SilentFile.is_silenced(line, silenced=silenced):
+                    file.write(f"{line}\n")
 
 
 FORMAT = "%(asctime)s %(levelname)s - %(message)s"
@@ -178,8 +239,32 @@ def main(debug: bool) -> None:
 
 
 @main.command(short_help="list all scripts", name="list")
-def _list() -> None:
-    click.echo("\n".join([str(s) for s in find_execs()]))
+@click.option(
+    "-e", "--enabled", is_flag=True, default=False, help="only list enabled scripts"
+)
+@click.option(
+    "-o",
+    "--output-format",
+    type=click.Choice(["path", "repr", "json"]),
+    help="what to print",
+    default="repr",
+)
+def _list(output_format: Literal["path", "repr", "json"], enabled: bool) -> None:
+    scripts = list(find_execs())
+    if enabled:
+        scripts = list(filter(lambda s: s.enabled, scripts))
+    for s in scripts:
+        match output_format:
+            case "path":
+                click.echo(s.path)
+
+            case "repr":
+                click.echo(str(s))
+
+            case "json":
+                import json
+
+                click.echo(json.dumps({"path": str(s.path), "enabled": s.enabled}))
 
 
 @main.command(short_help="test a script", name="test")
@@ -206,10 +291,46 @@ def run(cpu_count: int) -> None:
     Run all scripts in parallel, print the names of the scripts which
     have expired
     """
-    executables = find_execs()
-
-    write_results(run_parallel_scripts(executables, cpu_count=cpu_count), sys.stdout)
+    write_results(
+        run_parallel_scripts(find_execs(), cpu_count=cpu_count),
+        file=sys.stdout,
+        silenced=list(SilentFile(Path(silent_file_location)).load()),
+    )
     sys.stdout.flush()
+
+
+@main.command(name="silence", short_help="temporarily silence a reminder")
+@click.option(
+    "-d",
+    "--duration",
+    default=86400,
+    help="number of seconds to silence this reminder for [default: 1 day]",
+    type=int,
+)
+@click.argument("NAME")
+def _silence(duration: int, name: str) -> None:
+    """
+    Silences a reminder for some duration
+
+    This can be useful to ignore a reminder temporarily without modifying
+    the underlying mechanism to check for the reminder
+
+    This allows you to pass unix-like globs (uses the fnmatch module) for the name
+
+    \b
+    You could also use 'reminder-sink run' itself with fzf to select one, like:
+
+    reminder-sink silence "$(reminder-sink run | fzf)"
+
+    To change the location of the file where this stores silenced reminders,
+    you can set the REMINDER_SINK_SILENT_FILE envvar
+    """
+    sf = SilentFile(Path(silent_file_location))
+    try:
+        sf.add_to_file(name=name, duration=duration)
+    except ValueError as e:
+        click.echo(f"Error: {e}", err=True)
+        raise SystemExit(1)
 
 
 if __name__ == "__main__":
