@@ -315,7 +315,7 @@ def _silence(duration: int, name: str) -> None:
     This can be useful to ignore a reminder temporarily without modifying
     the underlying mechanism to check for the reminder
 
-    This allows you to pass unix-like globs (uses the fnmatch module) for the name
+    This allows you to pass a unix-like glob (uses the fnmatch module) for the name
 
     \b
     You could also use 'reminder-sink run' itself with fzf to select one, like:

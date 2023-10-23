@@ -131,9 +131,12 @@ Options:
   -h, --help   Show this message and exit.
 
 Commands:
-  list  list all scripts
-  run   run all scripts in parallel
-  test  test a script
+  list     list all scripts
+  run      run all scripts in parallel
+  silence  temporarily silence a reminder
+  test     test a script
+
+  See https://github.com/seanbreckenridge/reminder-sink for more information
 ```
 
 This uses the shebang of the script (e.g. `#!/usr/bin/env bash` or `#!/usr/bin/python3`) to determine
@@ -178,6 +181,33 @@ $ reminder-sink --debug run
 2023-10-06 00:54:28,357 DEBUG - water: (took 0.15303) with exit code 0 and output ''
 2023-10-06 00:54:28,436 DEBUG - listen_to_album: (took 0.23399) with exit code 0 and output ''
 ```
+
+To temporarily silence a reminder, you can use the 'silence' command:
+
+```
+Usage: reminder-sink silence [OPTIONS] NAME
+
+  Silences a reminder for some duration
+
+  This can be useful to ignore a reminder temporarily without modifying the
+  underlying mechanism to check for the reminder
+
+  This allows you to pass a unix-like glob (uses the fnmatch module) for the
+  name
+
+  You could also use 'reminder-sink run' itself with fzf to select one, like:
+
+  reminder-sink silence "$(reminder-sink run | fzf)"
+
+  To change the location of the file where this stores silenced reminders, you
+  can set the REMINDER_SINK_SILENT_FILE envvar
+
+Options:
+  -d, --duration INTEGER  number of seconds to silence this reminder for
+                          [default: 1 day]
+  -h, --help              Show this message and exit.
+```
+
 
 ## Installation
 
