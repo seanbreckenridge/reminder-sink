@@ -305,7 +305,7 @@ def run(cpu_count: int) -> None:
 
 
 @main.group(name="silence", short_help="temporarily silence a reminder")
-def _silence():
+def _silence() -> None:
     """
     Silences a reminder for some duration
 
