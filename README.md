@@ -20,7 +20,7 @@ else
 fi
 ```
 
-[`flipflop`](https://sean.fish/d/flipflop.py?redirect) are toggeable todos for things that I need to do often. Think like: re-add an energy bar to my bag, refill medication.
+[`flipflop`](https://sean.fish/d/flipflop.py?redirect) is a tool which lets me toggle todos for things that I need to do often. Think like: re-add an energy bar to my bag, refill medication.
 
 I'll often run `flipflop` when I'm away from my computer using [termux](https://termux.dev/en/) on my phone. The data for that is then synced to my computer with [syncthing](https://syncthing.net/)
 
