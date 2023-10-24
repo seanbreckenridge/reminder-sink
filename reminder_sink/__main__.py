@@ -6,7 +6,16 @@ import subprocess
 import shlex
 import logging
 from pathlib import Path
-from typing import TextIO, Iterable, NamedTuple, Optional, Iterator, List, Literal
+from typing import (
+    TextIO,
+    Iterable,
+    NamedTuple,
+    Optional,
+    Iterator,
+    List,
+    Literal,
+    get_args,
+)
 from concurrent.futures import ThreadPoolExecutor, Future, as_completed
 
 import click
@@ -243,6 +252,9 @@ def main(debug: bool) -> None:
         logging.basicConfig(level=logging.INFO, format=FORMAT)
 
 
+OutputFormat = Literal["repr", "path", "json"]
+
+
 @main.command(short_help="list all scripts", name="list")
 @click.option(
     "-e", "--enabled", is_flag=True, default=False, help="only list enabled scripts"
@@ -250,11 +262,12 @@ def main(debug: bool) -> None:
 @click.option(
     "-o",
     "--output-format",
-    type=click.Choice(["path", "repr", "json"]),
+    type=click.Choice(get_args(OutputFormat)),
     help="what to print",
-    default="repr",
+    default=get_args(OutputFormat)[0],
+    show_default=True,
 )
-def _list(output_format: Literal["path", "repr", "json"], enabled: bool) -> None:
+def _list(output_format: OutputFormat, enabled: bool) -> None:
     scripts = list(find_execs())
     if enabled:
         scripts = list(filter(lambda s: s.enabled, scripts))
