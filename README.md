@@ -28,7 +28,7 @@ Instead of adding some reminder system inside `flipflop`, `reminder-sink` is the
 
 ```bash
 #!/usr/bin/env bash
-OUTPUT="$(flipflop.py status -fo json | jq 'keys[]' -r)"
+OUTPUT="$(flipflop.py status --filter-on -o json | jq 'keys[]' -r)"
 
 if [[ -n "$OUTPUT" ]]; then
 	echo "$OUTPUT"
