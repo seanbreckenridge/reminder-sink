@@ -18,6 +18,11 @@ from typing import (
 )
 from concurrent.futures import ThreadPoolExecutor, Future, as_completed
 
+try:
+    from typing import Never
+except ImportError:
+    from typing_extensions import Never
+
 import click
 
 USAGE = """\
@@ -44,6 +49,10 @@ considered enabled if it is executable or if the file name ends with '.enabled'.
 
 
 INTERPRETER = os.environ.get("REMINDER_SINK_DEFAULT_INTERPRETER", "bash")
+
+
+def assert_never(x: Never) -> Never:
+    raise AssertionError(f"Unhandled type: {type(x).__name__}")
 
 
 def is_executable(path: str) -> bool:
@@ -283,6 +292,9 @@ def _list(output_format: OutputFormat, enabled: bool) -> None:
                 import json
 
                 click.echo(json.dumps({"path": str(s.path), "enabled": s.enabled}))
+
+            case _:
+                assert_never(output_format)
 
 
 @main.command(short_help="test a script", name="test")
