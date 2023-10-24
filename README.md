@@ -205,6 +205,12 @@ Commands:
   reset  reset all silenced reminders
 ```
 
+I have a binding in my [i3 blocklet](https://sean.fish/d/b-reminder-sink?redirect) that lets me quickly ignore an active reminder with [`fzf`](https://github.com/junegunn/fzf):
+
+```bash
+reminder-sink silence add "$(reminder-sink run | fzf --header="What to silence?")"
+```
+
 ## Installation
 
 Requires `python3.10+`
