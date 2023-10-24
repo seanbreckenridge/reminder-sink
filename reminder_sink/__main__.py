@@ -2,6 +2,7 @@ from __future__ import annotations
 import sys
 import os
 import time
+import fnmatch
 import subprocess
 import shlex
 import logging
@@ -116,7 +117,6 @@ class SilentFile(NamedTuple):
 
     @staticmethod
     def is_silenced(name: str, *, silenced: List[str]) -> bool:
-        import fnmatch
 
         return any(fnmatch.fnmatch(name, active) for active in silenced)
 
