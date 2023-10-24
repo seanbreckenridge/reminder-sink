@@ -19,7 +19,7 @@ from typing import (
 from concurrent.futures import ThreadPoolExecutor, Future, as_completed
 
 try:
-    from typing import Never
+    from typing import Never  # type: ignore
 except ImportError:
     from typing_extensions import Never
 
