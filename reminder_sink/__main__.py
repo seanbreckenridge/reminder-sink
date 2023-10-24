@@ -1,6 +1,7 @@
 from __future__ import annotations
 import sys
 import os
+import json
 import time
 import fnmatch
 import subprocess
@@ -289,8 +290,6 @@ def _list(output_format: OutputFormat, enabled: bool) -> None:
                 click.echo(str(s))
 
             case "json":
-                import json
-
                 click.echo(json.dumps({"path": str(s.path), "enabled": s.enabled}))
 
             case _:
