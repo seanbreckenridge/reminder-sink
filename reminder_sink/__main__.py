@@ -18,9 +18,9 @@ from typing import (
 )
 from concurrent.futures import ThreadPoolExecutor, Future, as_completed
 
-try:
-    from typing import Never  # type: ignore
-except ImportError:
+if sys.version_info >= (3, 11):
+    from typing import Never
+else:
     from typing_extensions import Never
 
 import click
