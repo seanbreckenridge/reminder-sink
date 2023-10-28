@@ -205,11 +205,7 @@ Commands:
   reset  reset all silenced reminders
 ```
 
-I have a binding in my [i3 blocklet](https://sean.fish/d/b-reminder-sink?redirect) that lets me quickly ignore an active reminder with [`fzf`](https://github.com/junegunn/fzf):
-
-```bash
-reminder-sink silence add "$(reminder-sink run | fzf --header="What to silence?")"
-```
+I have a binding in my [i3 blocklet](https://sean.fish/d/b-reminder-sink?redirect) that lets me quickly ignore an active reminder using [`fzf`](https://github.com/junegunn/fzf) and [`evry duration`](https://github.com/seanbreckenridge/evry) to allow me to pick an active reminder and enter a [human readable duration](https://github.com/seanbreckenridge/evry#duration). See [`reminder-sink-silence`](https://sean.fish/d/reminder-sink-silence?redirect)
 
 ## Installation
 
