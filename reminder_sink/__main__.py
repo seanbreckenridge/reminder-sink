@@ -21,9 +21,9 @@ from typing import (
 from concurrent.futures import ThreadPoolExecutor, Future, as_completed
 
 if sys.version_info >= (3, 11):
-    from typing import Never
+    from typing import assert_never
 else:
-    from typing_extensions import Never
+    from typing_extensions import assert_never
 
 import click
 
@@ -51,10 +51,6 @@ considered enabled if it is executable or if the file name ends with '.enabled'.
 
 
 INTERPRETER = os.environ.get("REMINDER_SINK_DEFAULT_INTERPRETER", "bash")
-
-
-def assert_never(x: Never) -> Never:
-    raise AssertionError(f"Unhandled type: {type(x).__name__}")
 
 
 def is_executable(path: str) -> bool:
@@ -118,7 +114,6 @@ class SilentFile(NamedTuple):
 
     @staticmethod
     def is_silenced(name: str, *, silenced: List[str]) -> bool:
-
         return any(fnmatch.fnmatch(name, active) for active in silenced)
 
 
@@ -292,8 +287,8 @@ def _list(output_format: OutputFormat, enabled: bool) -> None:
             case "json":
                 click.echo(json.dumps({"path": str(s.path), "enabled": s.enabled}))
 
-            case _:
-                assert_never(output_format)
+            case format:
+                assert_never(format)
 
 
 @main.command(short_help="test a script", name="test")
