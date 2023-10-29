@@ -89,6 +89,7 @@ class SilentFile(NamedTuple):
             logging.warning(f"Failed to parse integer from line: {line}")
             return None
         if curtime > expired_at:
+            logging.debug(f"{match} expired at {expired_at}, skipping...")
             return None
         return match
 
@@ -366,7 +367,7 @@ def _silence_add(duration: int, name: str) -> None:
 @_silence.command(name="list", short_help="list silenced reminders")
 def _silence_list() -> None:
     """
-    Lists all silenced reminders
+    Lists active silenced reminders
     """
     sf = SilentFile(Path(silent_file_location))
     for line in sf.load():
