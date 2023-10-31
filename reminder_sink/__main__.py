@@ -122,7 +122,7 @@ class SilentFile(NamedTuple):
             logging.debug(f"{self.file} is empty, skipping auto-prune")
             return
 
-        logging.debug(f"{self.file} is not empty, truncating")
+        logging.debug(f"{self.file} is not empty, deleting file")
         self.file.unlink()
 
     def add_to_file(self, name: str, duration: int) -> None:
