@@ -205,6 +205,8 @@ Commands:
   reset  reset all silenced reminders
 ```
 
+If you want to debug the current reminder status, pass debug like `reminder-sink --debug silence list`
+
 I have a binding in my [i3 blocklet](https://sean.fish/d/b-reminder-sink?redirect) that lets me quickly ignore an active reminder using [`fzf`](https://github.com/junegunn/fzf) and [`evry duration`](https://github.com/seanbreckenridge/evry#duration) to allow me to pick an active reminder and enter a [human readable duration](https://github.com/seanbreckenridge/evry#duration). See [`reminder-sink-silence`](https://sean.fish/d/reminder-sink-silence?redirect)
 
 ## Installation

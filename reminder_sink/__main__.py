@@ -7,6 +7,7 @@ import fnmatch
 import subprocess
 import shlex
 import logging
+from datetime import datetime
 from pathlib import Path
 from typing import (
     TextIO,
@@ -68,30 +69,30 @@ if "REMINDER_SINK_SILENT_FILE" in os.environ:
 silent_file_location = silent_file_location.expanduser().absolute()
 
 
+def silenced_line_is_active(line: str, curtime: int) -> Optional[str]:
+    """
+    parses a line that looks like:
+
+    name_of_script:1698097637
+    where the number is when the script expires
+    """
+    match, _, epoch = line.partition(":")
+    if not epoch.isnumeric():
+        logging.warning(f"Failed to parse integer from line: {line}")
+        return None
+    try:
+        expired_at = int(epoch)
+    except ValueError:
+        logging.warning(f"Failed to parse integer from line: {line}")
+        return None
+    if curtime > expired_at:
+        logging.debug(f"{match} expired at {expired_at} ({datetime.fromtimestamp(expired_at)}), skipping...")
+        return None
+    return match
+
+
 class SilentFile(NamedTuple):
     file: Path
-
-    @staticmethod
-    def line_is_active(line: str, curtime: int) -> Optional[str]:
-        """
-        parses a line that looks like:
-
-        name_of_script:1698097637
-        where the number is when the script expires
-        """
-        match, _, epoch = line.partition(":")
-        if not epoch.isnumeric():
-            logging.warning(f"Failed to parse integer from line: {line}")
-            return None
-        try:
-            expired_at = int(epoch)
-        except ValueError:
-            logging.warning(f"Failed to parse integer from line: {line}")
-            return None
-        if curtime > expired_at:
-            logging.debug(f"{match} expired at {expired_at}, skipping...")
-            return None
-        return match
 
     def load(self) -> Iterator[str]:
         if not self.file.exists():
@@ -100,9 +101,29 @@ class SilentFile(NamedTuple):
         curtime = int(time.time())
         for line in self.file.open("r"):
             if ls := line.strip():
-                if active := self.line_is_active(ls, curtime):
+                if active := silenced_line_is_active(ls, curtime):
                     logging.debug(f"active silencer: {repr(active)}")
                     yield active
+
+    def autoprune(self, *, silenced: List[str]) -> None:
+        # if there are items in the file that have expired, skip truncating
+        if len(silenced) > 0:
+            logging.debug(f"{self.file} has active silencers, skipping auto-prune")
+            return
+
+        # read the file, check if its already empty
+        # if its not, unlink the file
+        if not self.file.exists():
+            logging.debug(f"{self.file} does not exist, skipping auto-prune")
+            return
+
+        contents = self.file.read_text()
+        if contents.strip() == "":
+            logging.debug(f"{self.file} is empty, skipping auto-prune")
+            return
+
+        logging.debug(f"{self.file} is not empty, truncating")
+        self.file.unlink()
 
     def add_to_file(self, name: str, duration: int) -> None:
         if ":" in name:
@@ -311,15 +332,26 @@ def _test(script: str) -> None:
     help="number of threads to use",
     default=os.cpu_count(),
 )
-def run(cpu_count: int) -> None:
+@click.option(
+    "-a",
+    "--autoprune",
+    is_flag=True,
+    default=False,
+    help="automatically remove silenced file if none are active",
+)
+def run(cpu_count: int, autoprune: bool) -> None:
     """
     Run all scripts in parallel, print the names of the scripts which
     have expired
     """
+    sf = SilentFile(Path(silent_file_location))
+    silenced: List[str] = list(sf.load())
+    if autoprune:
+        sf.autoprune(silenced=silenced)
     write_results(
         run_parallel_scripts(find_execs(), cpu_count=cpu_count),
         file=sys.stdout,
-        silenced=list(SilentFile(Path(silent_file_location)).load()),
+        silenced=silenced,
     )
     sys.stdout.flush()
 
@@ -375,13 +407,24 @@ def _silence_list() -> None:
 
 
 @_silence.command(name="reset", short_help="reset all silenced reminders")
-def _silence_reset() -> None:
+@click.option(
+    "-f",
+    "--if-expired",
+    is_flag=True,
+    default=False,
+    help="only reset if all silenced reminders have expired",
+)
+def _silence_reset(if_expired: bool) -> None:
     """
     Resets all silenced reminders
     """
-    sf = Path(silent_file_location)
-    if sf.exists():
-        sf.unlink()
+    sf = SilentFile(Path(silent_file_location))
+    if if_expired:
+        silenced = list(sf.load())
+        sf.autoprune(silenced=silenced)
+    else:
+        if sf.file.exists():
+            sf.file.unlink()
 
 
 @_silence.command(name="file", short_help="print location of silenced reminders file")
