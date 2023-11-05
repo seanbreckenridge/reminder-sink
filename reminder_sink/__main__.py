@@ -10,6 +10,7 @@ import logging
 from datetime import datetime
 from pathlib import Path
 from typing import (
+    Sequence,
     TextIO,
     Iterable,
     NamedTuple,
@@ -86,7 +87,9 @@ def silenced_line_is_active(line: str, curtime: int) -> Optional[str]:
         logging.warning(f"Failed to parse integer from line: {line}")
         return None
     if curtime > expired_at:
-        logging.debug(f"{match} expired at {expired_at} ({datetime.fromtimestamp(expired_at)}), skipping...")
+        logging.debug(
+            f"{match} expired at {expired_at} ({datetime.fromtimestamp(expired_at)}), skipping..."
+        )
         return None
     return match
 
@@ -245,14 +248,19 @@ def parse_result(res: Result) -> List[str]:
 
 
 def write_results(
-    futures: Iterable[Future[Result]], /, *, file: TextIO, silenced: List[str]
+    futures: Iterable[Future[Result]],
+    /,
+    *,
+    files: Sequence[TextIO],
+    silenced: List[str],
 ) -> None:
     logging.debug(f"{silenced=}")
     for future in as_completed(futures):
         if lines := parse_result(future.result()):
             for line in lines:
                 if not SilentFile.is_silenced(line, silenced=silenced):
-                    file.write(f"{line}\n")
+                    for f in files:
+                        f.write(f"{line}\n")
 
 
 FORMAT = "%(asctime)s %(levelname)s - %(message)s"
@@ -333,13 +341,22 @@ def _test(script: str) -> None:
     default=os.cpu_count(),
 )
 @click.option(
+    "-f",
+    "--file",
+    type=click.File("w"),
+    envvar="REMINDER_SINK_OUTPUT_FILE",
+    show_envvar=True,
+    default=None,
+    help="additional file to write results to",
+)
+@click.option(
     "-a",
     "--autoprune",
     is_flag=True,
     default=False,
     help="automatically remove silenced file if none are active",
 )
-def run(cpu_count: int, autoprune: bool) -> None:
+def run(cpu_count: int, file: TextIO, autoprune: bool) -> None:
     """
     Run all scripts in parallel, print the names of the scripts which
     have expired
@@ -348,12 +365,26 @@ def run(cpu_count: int, autoprune: bool) -> None:
     silenced: List[str] = list(sf.load())
     if autoprune:
         sf.autoprune(silenced=silenced)
+
+    files = [sys.stdout]
+    if file is not None:
+        if file.name == "<stdout>":
+            click.echo(
+                "This already writes to STDOUT ('-'), -f/--file is to specify another file",
+                err=True,
+            )
+        else:
+            files.append(file)
+
+    click.echo(f"Writing to [{', '.join(f.name for f in files)}]", err=True)
+
     write_results(
         run_parallel_scripts(find_execs(), cpu_count=cpu_count),
-        file=sys.stdout,
+        files=files,
         silenced=silenced,
     )
-    sys.stdout.flush()
+    for f in files:
+        f.flush()
 
 
 @main.group(name="silence", short_help="temporarily silence a reminder")
