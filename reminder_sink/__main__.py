@@ -376,7 +376,7 @@ def run(cpu_count: int, file: TextIO, autoprune: bool) -> None:
         else:
             files.append(file)
 
-    click.echo(f"Writing to [{', '.join(f.name for f in files)}]", err=True)
+    logging.debug(f"Writing to [{', '.join(f.name for f in files)}]")
 
     write_results(
         run_parallel_scripts(find_execs(), cpu_count=cpu_count),
