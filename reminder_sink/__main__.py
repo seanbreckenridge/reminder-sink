@@ -189,6 +189,10 @@ class Script(NamedTuple):
         return name, exitcode, output
 
 
+def script_is_enabled(path: Path) -> bool:
+    return path.name.endswith(".enabled") or is_executable(str(path))
+
+
 def find_execs() -> Iterable[Script]:
     dirs = os.environ.get("REMINDER_SINK_PATH")
     if not dirs:
@@ -211,9 +215,8 @@ def find_execs() -> Iterable[Script]:
         for file in os.listdir(d):
             if os.path.basename(file) in IGNORE_FILES:
                 continue
-            abspath = os.path.abspath(os.path.join(d, file))
-            enabled = is_executable(abspath) or file.endswith(".enabled")
-            yield Script(path=Path(abspath), enabled=enabled)
+            abspath_f = Path(os.path.abspath(os.path.join(d, file)))
+            yield Script(path=abspath_f, enabled=script_is_enabled(abspath_f))
 
         logging.debug(f"reminder-sink: finished searching {d}")
 
@@ -329,6 +332,42 @@ def _test(script: str) -> None:
     name, exitcode, output = Script(path=Path(script), enabled=True).run()
     click.echo(f"Finished {name} with exit code {exitcode} and output {repr(output)}")
     exit(exitcode)
+
+
+@main.command(short_help="toggle a script", name="toggle")
+@click.argument("SCRIPT", type=click.Path(exists=True, dir_okay=False))
+def _toggle(script: str) -> None:
+    """
+    If the script is enabled, disable it, and vice versa
+
+    This renames the file to/from .enabled
+    and toggles executable permissions
+    """
+    scp = Path(script).absolute()
+    is_enabled = script_is_enabled(scp)
+
+    sc_str = str(scp)
+    if is_enabled:
+        click.echo("Was enabled, disabling...", err=True)
+        if is_executable(sc_str):
+            click.echo("Removing executable permissions...", err=True)
+            os.chmod(sc_str, 0o644)
+        if sc_str.endswith(".enabled"):
+            click.echo("Removing '.enabled' suffix...", err=True)
+            os.rename(sc_str, sc_str[: -len(".enabled")])
+    else:
+        click.echo("Was disabled, enabling...", err=True)
+        if not is_executable(sc_str):
+            click.echo("Adding executable permissions...", err=True)
+            os.chmod(sc_str, 0o755)
+        if sc_str.endswith(".enabled"):
+            pass
+        elif sc_str.endswith(".disabled"):
+            click.echo("Removing '.disabled' suffix...", err=True)
+            os.rename(sc_str, sc_str[: -len(".disabled")] + ".enabled")
+        else:
+            click.echo("Adding '.enabled' suffix...", err=True)
+            os.rename(sc_str, sc_str + ".enabled")
 
 
 @main.command(short_help="run all scripts in parallel")
