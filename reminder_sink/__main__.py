@@ -445,7 +445,7 @@ def _silence() -> None:
     "-d",
     "--duration",
     default=86400,
-    help="number of seconds to silence this reminder for [default: 1 day]",
+    help="number of seconds to silence this reminder for [default: 86400 (1 day)]",
     type=int,
 )
 @click.argument("NAME")
