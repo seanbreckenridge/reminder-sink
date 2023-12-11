@@ -1,4 +1,4 @@
-This is a unobtrusive, scriptable reminder/habit/todo task-runner. This does
+This is an unobtrusive, scriptable reminder/habit/todo task-runner. This does
 not actually have any way to setup/remind you for specific habits/tasks, it
 provides more of a set of rules which make for an unobtrusive reminder/habit
 tracker, it acts as the "sink" for all my other tools/scripts
