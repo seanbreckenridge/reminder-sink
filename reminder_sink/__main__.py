@@ -193,7 +193,7 @@ def script_is_enabled(path: Path) -> bool:
     return path.name.endswith(".enabled") or is_executable(str(path))
 
 
-def find_execs() -> Iterable[Script]:
+def find_execs(exclude: List[str]) -> Iterable[Script]:
     dirs = os.environ.get("REMINDER_SINK_PATH")
     if not dirs:
         click.echo(
@@ -216,7 +216,12 @@ def find_execs() -> Iterable[Script]:
             if os.path.basename(file) in IGNORE_FILES:
                 continue
             abspath_f = Path(os.path.abspath(os.path.join(d, file)))
-            yield Script(path=abspath_f, enabled=script_is_enabled(abspath_f))
+            for pattern in exclude:
+                if fnmatch.fnmatch(str(abspath_f), pattern):
+                    logging.debug(f"reminder-sink: matched {pattern}, skipping {file}")
+                    break
+            else:
+                yield Script(path=abspath_f, enabled=script_is_enabled(abspath_f))
 
         logging.debug(f"reminder-sink: finished searching {d}")
 
@@ -298,6 +303,13 @@ OutputFormat = Literal["repr", "path", "json"]
     "-e", "--enabled", is_flag=True, default=False, help="only list enabled scripts"
 )
 @click.option(
+    "-E",
+    "--exclude",
+    type=str,
+    multiple=True,
+    help="exclude scripts matching this pattern",
+)
+@click.option(
     "-o",
     "--output-format",
     type=click.Choice(get_args(OutputFormat)),
@@ -305,8 +317,8 @@ OutputFormat = Literal["repr", "path", "json"]
     default=get_args(OutputFormat)[0],
     show_default=True,
 )
-def _list(output_format: OutputFormat, enabled: bool) -> None:
-    scripts = list(find_execs())
+def _list(output_format: OutputFormat, enabled: bool, exclude: Sequence[str]) -> None:
+    scripts = list(find_execs(list(exclude)))
     if enabled:
         scripts = list(filter(lambda s: s.enabled, scripts))
     for s in scripts:
@@ -389,13 +401,20 @@ def _toggle(script: str) -> None:
     help="additional file to write results to",
 )
 @click.option(
+    "-E",
+    "--exclude",
+    type=str,
+    multiple=True,
+    help="exclude scripts matching this pattern",
+)
+@click.option(
     "-a",
     "--autoprune",
     is_flag=True,
     default=False,
     help="automatically remove silenced file if none are active",
 )
-def run(cpu_count: int, file: TextIO, autoprune: bool) -> None:
+def run(cpu_count: int, file: TextIO, autoprune: bool, exclude: Sequence[str]) -> None:
     """
     Run all scripts in parallel, print the names of the scripts which
     have expired
@@ -418,7 +437,7 @@ def run(cpu_count: int, file: TextIO, autoprune: bool) -> None:
     logging.debug(f"Writing to [{', '.join(f.name for f in files)}]")
 
     write_results(
-        run_parallel_scripts(find_execs(), cpu_count=cpu_count),
+        run_parallel_scripts(find_execs(list(exclude)), cpu_count=cpu_count),
         files=files,
         silenced=silenced,
     )
